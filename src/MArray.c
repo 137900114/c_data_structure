@@ -28,7 +28,7 @@ MArray marray_make_with_size(size_t element_size,size_t size){
     return array;
 }
 
-void marray_distroy(MArray* array){
+void marray_destroy(MArray* array){
     free(array->data);
     array->capacity  =0;
     array->element_size = 0;
@@ -60,7 +60,7 @@ void marray_push_back_multi(MArray* array,void* data,size_t num){
         dest = offset(array->data,array->element_size,array->end);
     }
 
-    memcpy(dest,data,array->element_size);
+    memcpy(dest,data,array->element_size * num);
     array->end += num;
 }
 

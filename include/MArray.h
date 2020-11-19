@@ -13,7 +13,7 @@ typedef struct _MArray{
 
 MArray marray_make(size_t element_size);
 MArray marray_make_with_size(size_t element_size,size_t size);
-void marray_distroy(MArray* marray);
+void marray_destroy(MArray* marray);
 
 void marray_push_back(MArray* array,void* data);
 void marray_push_back_multi(MArray* array,void* data,size_t num);
