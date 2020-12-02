@@ -97,11 +97,12 @@ void mempool_finalize(){
     }
 
     marray_destroy(&used_memory_pages);
+    is_memory_pool_initialized = FALSE;
 }
 
 void* mempool_allocate(size_t size){
     if(!is_memory_pool_initialized)
-        return NULL;
+        mempool_initialize();
 
     if(size > block_size_table[_countof(block_size_table) - 1]){
         //no block in the block table is suitable for the memory size
@@ -141,8 +142,4 @@ void mempool_deallocate(void* mem,size_t size){
 
     new_block->next = memory_page_blocks[block_index];
     memory_page_blocks[block_index] = new_block;
-}
-
-BOOL mempool_avaliblity(){
-    return is_memory_pool_initialized;
 }

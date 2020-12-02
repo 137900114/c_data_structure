@@ -1,7 +1,7 @@
 #ifndef _MLinkedList_
 #define _MLinkedList_
 
-#include "helper.h"
+#include "datadef.h"
 
 typedef struct _MLinkedListNode MLinkedListNode;
 

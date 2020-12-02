@@ -1,7 +1,7 @@
 #ifndef _MArray_
 #define _MArray_
 
-#include "helper.h"
+#include "datadef.h"
 
 typedef struct _MArray{
     void* data;
@@ -23,4 +23,6 @@ void marray_pop_back_multi(MArray* array,size_t num);
 BOOL marray_visit(MArray* array,void* data,size_t index);
 BOOL marray_visit_multi(MArray* array,void* data,size_t index,size_t num);
 size_t marray_size(MArray* array);
+
+void* marray_data(MArray* marray,size_t index);
 #endif

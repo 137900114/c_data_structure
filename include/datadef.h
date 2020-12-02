@@ -1,9 +1,9 @@
-#ifndef _helper_
-#define _helper_
+#ifndef _datadef_
+#define _datadef_
 
 #ifndef BOOL
 
-typedef int BOOL;
+#define BOOL int
 #define TRUE 1
 #define FALSE 0
 

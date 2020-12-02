@@ -26,10 +26,7 @@ static void destroy_node(MLinkedListNode* node,size_t element_size){
 
 
 MLinkedList mlist_make(size_t element_size){
-    if(!mempool_avaliblity()){
-        mempool_initialize();
-    }
-
+    
     MLinkedList list;
     list.element_size = element_size;
     list.end = NULL;

@@ -93,3 +93,10 @@ BOOL marray_visit_multi(MArray* array,void* data,size_t index,size_t num){
 size_t marray_size(MArray* array){
     return array->end;
 }
+
+inline void* marray_data(MArray* array,size_t index){
+    if(array->end <= index){
+        return NULL;
+    }
+    return (char*)array->data + array->element_size * index;
+}
