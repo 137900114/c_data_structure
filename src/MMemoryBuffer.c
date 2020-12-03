@@ -36,21 +36,31 @@ inline void membuffer_zero(MemoryBuffer* buffer){
 }
 
 MString make_string(const char* str){
-    int size = strlen(str);
-    MString mstr = make_membuffer(size);
-    if(mstr.data != NULL){
-        memcpy(mstr.data,str,size);
-        mstr.size = size;
+    MString mstr;
+    if(str == NULL){
+        mstr.data = NULL;
+        mstr.size = 0;
+    }else{
+        int size = strlen(str) + 1;
+        mstr = make_membuffer(size);
+        if(mstr.data != NULL){
+            memcpy(mstr.data,str,size);
+            *((char*)mstr.data + mstr.size) = '\0';
+        }
     }
     return mstr;
 }
 
 inline int compare_string(MString* mstr,const char* str){
-    return memcmp(mstr->data,str,mstr->size);
+    return strcmp(mstr->data,str);
+}
+
+inline int compare_string_string(MString* lhs,MString* rhs){
+    return compare_string(lhs,(char*)rhs->data);
 }
 
 inline char visit_string(MString* mstr,size_t index){
-    if(index < mstr->size){
+    if(index < mstr->size - 1){
         char* data = (char*)mstr->data;
         return data[index];        
     }
@@ -67,19 +77,60 @@ void copy_string(MString* dest,MString* src){
     memcpy(dest->data,src->data,src->size);
 }
 
-void cat_string(MString* dest,MString* src){
+void cat_string(MString* dest,const char* str){
     if(dest->data == NULL){
-        copy_string(dest,src);
+        *dest = make_string(str);
         return;
     }
-    if(src->data == NULL){
+    if(str == NULL){
         return;
     }
-    MString newstr = make_membuffer(dest->size + src->size);
-    memcpy(newstr.data,dest->data,dest->size);
-    char* srcdata = (char*)newstr.data + dest->size;
-    memcpy(srcdata,src->data,src->size);
+    size_t str_size = strlen(str);
+    MString newstr = make_membuffer(dest->size + str_size);
+    strcpy((char*)newstr.data,(char*)dest->data);
+    strcat((char*)newstr.data,str);
 
     destroy_string(dest);
     *dest = newstr;
+}
+
+inline void cat_string_string(MString* dest,MString* src){
+    cat_string(dest,(char*)src->data);
+}
+
+inline size_t string_len(MString* str){
+    if(str->data) return 0;
+    return str->size - 1;
+}
+
+inline char* string_data(MString* str){
+    return (char*)str->data;
+}
+
+static void string_constructor_def(void* src){
+    MString* str = (MString*)src;
+    str->data = NULL;
+    str->size = 0;
+}
+
+static void string_constructor_copy(void* dest,void* src,size_t trash){
+    MString* src_str = (MString*)src;
+    MString* dest_str = (MString*)dest;
+    if(dest_str->data != NULL){
+        destroy_string(dest_str);
+    }
+    *dest_str = make_string((char*)src_str->data);
+}
+
+static void string_deconstructor(void* data){
+    destroy_string((MString*)data);
+}
+
+inline ContainerElementDesc string_element_descriptor(){
+    ContainerElementDesc desc;
+    desc.element_size = sizeof(MString);
+    desc.cons_copy = string_constructor_copy;
+    desc.cons_def = string_constructor_def;
+    desc.decons = string_deconstructor;
+    return desc;
 }

@@ -1,5 +1,6 @@
 #include "MLinkedList.h"
 #include "MMemoryPool.h"
+#include "MMemoryBuffer.h"
 
 #include <string.h>
 
@@ -7,18 +8,19 @@ static size_t linked_list_node_size(size_t element_size){
     return element_size + sizeof(MLinkedListNode);
 }
 
-static MLinkedListNode* make_node(size_t element_size,void* data){
+static MLinkedListNode* make_node(size_t element_size,void* data,constructor_copy_t copy){
     size_t node_size = linked_list_node_size(element_size);
 
     MLinkedListNode* newnode = (MLinkedListNode*)mempool_allocate(node_size);
     newnode->next = NULL;
     newnode->value = (char*)newnode + sizeof(MLinkedListNode);
 
-    memcpy(newnode->value,data,element_size);
+    copy(newnode->value,data,element_size);
     return newnode;
 }
 
-static void destroy_node(MLinkedListNode* node,size_t element_size){
+static void destroy_node(MLinkedListNode* node,size_t element_size,deconstructor_t deco){
+    deco(node->value);
     size_t size = linked_list_node_size(element_size);
 
     mempool_deallocate(node,size);
@@ -28,7 +30,7 @@ static void destroy_node(MLinkedListNode* node,size_t element_size){
 MLinkedList mlist_make(size_t element_size){
     
     MLinkedList list;
-    list.element_size = element_size;
+    list.element = default_container_element_desc(element_size);
     list.end = NULL;
     list.head = NULL;
     list.length = 0;
@@ -36,15 +38,15 @@ MLinkedList mlist_make(size_t element_size){
     return list;
 }
 
-void mlist_destroy(MLinkedList* list){
+void mlist_clear(MLinkedList* list){
     MLinkedListNode* node = list->head;
 
     while(node != NULL){
         MLinkedListNode* next = node->next;
-        destroy_node(node,list->element_size);
+        destroy_node(node,list->element.element_size,list->element.decons);
         node = next;
     }
-    
+
     list->end = NULL;
     list->head = NULL;
     list->length = 0;
@@ -52,11 +54,18 @@ void mlist_destroy(MLinkedList* list){
     return;
 }
 
+void mlist_destroy(MLinkedList* list){
+    mlist_clear(list);
+
+    list->element = default_container_element_desc(0);
+    return;
+}
+
 BOOL mlist_insert(MLinkedList* list,size_t index,void* data){
     if(index >= list->length){
         if(index != 0) return FALSE;
     }
-    MLinkedListNode* newnode = make_node(list->element_size,data);
+    MLinkedListNode* newnode = make_node(list->element.element_size,data,list->element.cons_copy);
     
     if(list->length == 0){
         list->end = newnode;
@@ -85,7 +94,7 @@ BOOL mlist_insert(MLinkedList* list,size_t index,void* data){
 }
 
 BOOL mlist_insert_head(MLinkedList* list,void* data){
-    MLinkedListNode* node = make_node(list->element_size,data);
+    MLinkedListNode* node = make_node(list->element.element_size,data,list->element.cons_copy);
 
     if(list->length == 0){
         list->head = node;
@@ -125,7 +134,7 @@ BOOL mlist_remove(MLinkedList* list,size_t index){
         curr->next = target->next;
     }
 
-    destroy_node(target,list->element_size);
+    destroy_node(target,list->element.element_size,list->element.decons);
     list->length--;
     return TRUE;
 }
@@ -140,7 +149,7 @@ BOOL mlist_remove_head(MLinkedList* list){
     list->head = node->next;
     list->length--;
 
-    destroy_node(node,list->element_size);
+    destroy_node(node,list->element.element_size,list->element.decons);
     return TRUE;
 }
 
@@ -162,10 +171,33 @@ BOOL mlist_visit(MLinkedList* list,size_t index,void* data){
         target = target->next;
     }
 
-    memcpy(data,target->value,list->element_size);
+    list->element.cons_copy(data,target->value,list->element.element_size);
     return TRUE;
+}
+
+BOOL mlist_set(MLinkedList* list,size_t index,void* data){
+    MLinkedListNode* node = mlist_get_node(list,index);
+    if(node == NULL) return FALSE;
+    list->element.cons_copy(node->value,data,list->element.element_size);
+    return TRUE;
+}
+
+inline BOOL mlist_set_string(MLinkedList* list,size_t index,const char* str){
+    MString string = make_string(str);
+    BOOL rv = mlist_set(list,index,&string);
+    destroy_string(&string);
+    return rv;
 }
 
 MLinkedListNode* mlist_get_head(MLinkedList* list){
     return list->head;
+}
+
+MLinkedListNode* mlist_get_node(MLinkedList* list,size_t index){
+    if(list->length <= index) return NULL;
+    MLinkedListNode* node = list->head;
+    while(--index != 0){
+        node = node->next;
+    } 
+    return node;
 }

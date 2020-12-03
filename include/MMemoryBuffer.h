@@ -17,15 +17,23 @@ void* membuffer_offset(MemoryBuffer* buffer,size_t offset);
 size_t membuffer_size(MemoryBuffer* buffer);
 void membuffer_zero(MemoryBuffer* buffer);
 
+
 typedef MemoryBuffer MString;
+
 MString make_string(const char* str);
 void copy_string(MString* dest,MString* src);
+size_t string_len(MString* str);
 
 int compare_string(MString* mstr,const char* str);
+int compare_string_string(MString* lhs,MString* rhs);
+
+void cat_string(MString* lhs,const char* rhs);
+void cat_string_string(MString* lhs,MString* rhs);
+
 char visit_string(MString* mstr,size_t index);
 void destroy_string(MString* mstr);
 
-void cat_string(MString* dest,MString* other);
-BOOL string_data(char* buffer,size_t buffer_size,MString* str);
+char* string_data(MString* str);
 
+ContainerElementDesc string_element_descriptor();
 #endif

@@ -32,7 +32,7 @@ static const size_t page_size = 1 << 16;
 static void* memory_page_table[_countof(block_size_table)];
 
 typedef struct _memory_page_table_block{
-    void* data;
+    //void* data;
     struct _memory_page_table_block* next;
 } _memory_page_table_block;
 
@@ -46,13 +46,13 @@ static MArray used_memory_pages;
 
 static _memory_page_table_block* inittialize_page(void* page,size_t block_size){
     _memory_page_table_block* head = (_memory_page_table_block*)page;
-    head->data = head;
+    //head->data = head;
     head->next = NULL;
     _memory_page_table_block* current = head;
     size_t block_num = page_size / block_size;
     for(int j = 1;j < block_num;j++){
         _memory_page_table_block* next = (_memory_page_table_block*)(((char*)current) + block_size);
-        next->data = next;
+        //next->data = next;
         next->next = current->next;
         current->next = next;
 

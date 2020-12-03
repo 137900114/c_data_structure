@@ -16,5 +16,23 @@ typedef float real;
 #endif
 
 #include <stdio.h>
+#include <stddef.h>
 
+typedef void (*constructor_def_t)(void* dest);
+typedef void (*constructor_copy_t)(void* dest,void* src,size_t ele_size);
+typedef void (*deconstructor_t)(void* data);
+
+typedef struct _ContainerElementDesc{
+    constructor_def_t cons_def;
+    constructor_copy_t cons_copy;
+    deconstructor_t decons;
+
+    size_t element_size;
+} ContainerElementDesc;
+
+void _default_constructor_def_t(void* dest);
+void _default_constructor_copy_t(void* dest,void* src,size_t size);
+void _default_deconstructor_t(void* data);
+
+ContainerElementDesc default_container_element_desc(size_t element_size);
 #endif
