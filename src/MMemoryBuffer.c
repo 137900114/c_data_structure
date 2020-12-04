@@ -133,6 +133,7 @@ inline ContainerElementDesc string_element_descriptor(){
     desc.element_size = sizeof(MString);
     desc.cons_copy = string_constructor_copy;
     desc.cons_def = string_constructor_def;
+    desc.cons_move = _default_constructor_move_t;
     desc.decons = string_deconstructor;
     return desc;
 }

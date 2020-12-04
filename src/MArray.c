@@ -41,6 +41,7 @@ MArray marray_make_ed(ContainerElementDesc ed){
     if(ed.cons_copy == NULL) ed.cons_copy = _default_constructor_copy_t;
     if(ed.cons_def == NULL) ed.cons_def = _default_constructor_def_t;
     if(ed.decons == NULL) ed.decons = _default_deconstructor_t;
+    if(ed.cons_move == NULL) ed.cons_move = _default_constructor_move_t;
     
     array.element = ed;
     array.data = malloc(ed.element_size * array.capacity);
@@ -57,6 +58,7 @@ MArray marray_make_ed_with_size(size_t size,ContainerElementDesc ed){
     if(ed.cons_copy == NULL) ed.cons_copy = _default_constructor_copy_t;
     if(ed.cons_def == NULL) ed.cons_def = _default_constructor_def_t;
     if(ed.decons == NULL) ed.decons = _default_deconstructor_t;
+    if(ed.cons_move == NULL) ed.cons_move = _default_constructor_move_t;
     
     array.element = ed;
     array.data = malloc(ed.element_size * array.capacity);
@@ -107,7 +109,7 @@ void marray_push_back_multi(MArray* array,void* data,size_t num){
         for(size_t i = 0;i != array->end;i++){
             void* dest = offset(new_data,array->element.element_size,i);
             void* src = offset(array->data,array->element.element_size,i);
-            array->element.cons_copy(dest,src,array->element.element_size);
+            array->element.cons_move(dest,src,array->element.element_size);
         }
         free(array->data);
         array->data = new_data;

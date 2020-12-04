@@ -190,7 +190,7 @@ inline MHashTable mhash_table_make_string(size_t value_element_size){
 
 BOOL mhash_table_insert_key_string(MHashTable* hashtable,void* value_element,const char* key){
     MString key_string = make_string(key);
-    BOOL rv = mhash_table_insert(&hashtable,&key_string,value_element);
+    BOOL rv = mhash_table_insert(hashtable,&key_string,value_element);
     destroy_string(&key_string);
     return rv;
 }
@@ -201,7 +201,7 @@ BOOL mhash_table_remove(MHashTable* hashtable,void* key_element){
 
 BOOL mhash_table_remove_string(MHashTable* hashtable,const char* key){
     MString key_string = make_string(key);
-    BOOL rv = mhash_table_remove(&hashtable,&key_string);
+    BOOL rv = mhash_table_remove(hashtable,&key_string);
     destroy_string(&key_string);
     return rv;
 }
