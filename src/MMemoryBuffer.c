@@ -109,6 +109,8 @@ inline char* string_data(MString* str){
 
 static void string_constructor_def(void* src){
     MString* str = (MString*)src;
+    if(str->data != NULL)
+        destroy_string(str);
     str->data = NULL;
     str->size = 0;
 }

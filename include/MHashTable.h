@@ -11,9 +11,9 @@ typedef BOOL (* mhash_key_comparator)(void* dest,void* src);
 
 typedef struct _MHashTable{
     MArray hashtable;
-
-    size_t key_element_size;
-    size_t value_element_size;
+    
+    ContainerElementDesc key_element;
+    ContainerElementDesc value_element;
 
     mhash_function_t hasher;
     mhash_key_comparator comparator;

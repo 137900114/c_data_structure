@@ -8,14 +8,18 @@ static size_t linked_list_node_size(size_t element_size){
     return element_size + sizeof(MLinkedListNode);
 }
 
-static MLinkedListNode* make_node(size_t element_size,void* data,constructor_copy_t copy){
+static MLinkedListNode* make_node(size_t element_size,void* data,constructor_copy_t copy,constructor_def_t def){
     size_t node_size = linked_list_node_size(element_size);
 
     MLinkedListNode* newnode = (MLinkedListNode*)mempool_allocate(node_size);
     newnode->next = NULL;
     newnode->value = (char*)newnode + sizeof(MLinkedListNode);
 
-    copy(newnode->value,data,element_size);
+    if(data != NULL)
+        copy(newnode->value,data,element_size);
+    else
+        def(newnode->value);
+    
     return newnode;
 }
 
@@ -65,7 +69,7 @@ BOOL mlist_insert(MLinkedList* list,size_t index,void* data){
     if(index >= list->length){
         if(index != 0) return FALSE;
     }
-    MLinkedListNode* newnode = make_node(list->element.element_size,data,list->element.cons_copy);
+    MLinkedListNode* newnode = make_node(list->element.element_size,data,list->element.cons_copy,list->element.cons_def);
     
     if(list->length == 0){
         list->end = newnode;
@@ -94,7 +98,7 @@ BOOL mlist_insert(MLinkedList* list,size_t index,void* data){
 }
 
 BOOL mlist_insert_head(MLinkedList* list,void* data){
-    MLinkedListNode* node = make_node(list->element.element_size,data,list->element.cons_copy);
+    MLinkedListNode* node = make_node(list->element.element_size,data,list->element.cons_copy,list->element.cons_def);
 
     if(list->length == 0){
         list->head = node;
@@ -191,6 +195,10 @@ inline BOOL mlist_set_string(MLinkedList* list,size_t index,const char* str){
 
 MLinkedListNode* mlist_get_head(MLinkedList* list){
     return list->head;
+}
+
+MLinkedListNode* mlist_get_end(MLinkedList* list){
+    return list->end;
 }
 
 MLinkedListNode* mlist_get_node(MLinkedList* list,size_t index){

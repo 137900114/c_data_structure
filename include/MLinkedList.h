@@ -42,6 +42,7 @@ BOOL mlist_set_string(MLinkedList* list,size_t index,const char* data);
 
 MLinkedListNode* mlist_get_head(MLinkedList* list);
 MLinkedListNode* mlist_get_node(MLinkedList* list,size_t index);
+MLinkedListNode* mlist_get_end(MLinkedList* list);
 
 void mlist_clear(MLinkedList* list);
 #endif

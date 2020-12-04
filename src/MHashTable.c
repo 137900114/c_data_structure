@@ -68,8 +68,8 @@ static MHashTable mhash_table_make_with_bucket(size_t key_element_size,size_t va
             mhash_function_t hasher,mhash_key_comparator comparator,size_t bucket){
     MHashTable table;
     table.table_bucket_size = bucket;
-    table.key_element_size = key_element_size;
-    table.value_element_size = value_element_size;
+    table.key_element = default_container_element_desc(key_element_size);
+    table.value_element = default_container_element_desc(value_element_size);
 
     table.hasher = hasher;
     table.comparator = comparator;
@@ -92,7 +92,7 @@ static void mhash_table_try_to_resize(MHashTable* table,size_t newsize){
     
     size_t new_table_bucket_size = find_next_hash_table_size(newsize);
     MArray new_table = marray_make_with_size(sizeof(MLinkedList),new_table_bucket_size);
-    size_t new_table_element_size = table->key_element_size + table->value_element_size;
+    size_t new_table_element_size = table->key_element.element_size + table->value_element.element_size;
     for(size_t i  = 0;i != new_table_bucket_size;i++){
         MLinkedList* new_list = (MLinkedList*)marray_data(&new_table,i);
         *new_list = mlist_make(new_table_element_size);
@@ -139,13 +139,12 @@ static BOOL mhash_table_insert_after_resize(MHashTable* table,void* key_element,
             return FALSE;
         }
     }
-    
-    MemoryBuffer buffer = make_membuffer(table->key_element_size + table->value_element_size);
-    memcpy(buffer.data,key_element,table->key_element_size);
-    memcpy(membuffer_offset(&buffer,table->key_element_size),value_element,table->value_element_size);
 
-    mlist_insert_end(target_bucket,buffer.data);
-    destroy_membuffer(&buffer);
+    mlist_insert_end(target_bucket,NULL);
+    MLinkedListNode* end = mlist_get_end(target_bucket);
+    table->key_element.cons_copy(end->value,key_element,table->key_element.element_size);
+    table->value_element.cons_copy(((char*)end->value) + table->key_element.element_size,
+            value_element,table->value_element.element_size);
 
     return TRUE;
 }
@@ -189,20 +188,46 @@ inline MHashTable mhash_table_make_string(size_t value_element_size){
                 string_hash_function,string_comparator);
 }
 
-BOOL mhash_table_insert(MHashTable* hashtable,void* value_element,void* key_element);
-BOOL mhash_table_insert_key_string(MHashTable* hashtable,void* value_element,const char* key);
-
-BOOL mhash_table_remove(MHashTable* hashtable,void* key_element);
-BOOL mhash_table_remove_string(MHashTable* hashtable,const char* key);
-
-BOOL mhash_table_visit(MHashTable* hashtable,void* key_element,void* dest_value_element);
-BOOL mhash_table_visit_string(MHashTable* hashtable,const char* key,void* dest_value_element){
+BOOL mhash_table_insert_key_string(MHashTable* hashtable,void* value_element,const char* key){
     MString key_string = make_string(key);
-    
+    BOOL rv = mhash_table_insert(&hashtable,&key_string,value_element);
+    destroy_string(&key_string);
+    return rv;
 }
 
-BOOL mhash_table_set(MHashTable* hashtable,void* key_element,void* value_element);
-BOOL mhash_table_set_string(MHashTable* hashtable,const char* key_element,void* value_element);
+BOOL mhash_table_remove(MHashTable* hashtable,void* key_element){
+    return FALSE;
+}
+
+BOOL mhash_table_remove_string(MHashTable* hashtable,const char* key){
+    MString key_string = make_string(key);
+    BOOL rv = mhash_table_remove(&hashtable,&key_string);
+    destroy_string(&key_string);
+    return rv;
+}
+
+BOOL mhash_table_visit(MHashTable* hashtable,void* key_element,void* dest_value_element){
+    return FALSE;
+}
+BOOL mhash_table_visit_string(MHashTable* hashtable,const char* key,void* dest_value_element){
+    MString key_string = make_string(key);
+    BOOL rv = mhash_table_visit(hashtable,&key_string,dest_value_element);
+    destroy_string(&key_string);
+    return rv;
+
+}
+
+BOOL mhash_table_set(MHashTable* hashtable,void* key_element,void* value_element){
+    return FALSE;
+}
+
+BOOL mhash_table_set_string(MHashTable* hashtable,const char* key,void* value_element){
+    MString key_string = make_string(key);
+    BOOL rv = mhash_table_visit(hashtable,&key_string,value_element);
+    destroy_string(&key_string);
+    return rv;
+}
+
 
 void mhash_table_destroy(MHashTable* hashtable){
 
@@ -211,8 +236,8 @@ void mhash_table_destroy(MHashTable* hashtable){
         mlist_destroy(list);
     }
 
-    hashtable->key_element_size = 0;
-    hashtable->value_element_size = 0;
+    hashtable->key_element = default_container_element_desc(0);
+    hashtable->value_element = default_container_element_desc(0);
     hashtable->table_size = 0;
     hashtable->table_bucket_size = 0;
     hashtable->hasher = NULL;
